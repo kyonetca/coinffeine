@@ -50,13 +50,8 @@ object Build extends sbt.Build {
   }
 
   lazy val root = (Project(id = "coinffeine", base = file("."))
-    aggregate(peer, protocol, model, commonTest, gui, server, test, okpaymock)
+    aggregate(peer, protocol, model, commonTest, gui)
     settings(ScoverageSbtPlugin.instrumentSettings: _*)
-  )
-
-  lazy val server = (Project(id = "server", base = file("coinffeine-server"))
-    settings(ScoverageSbtPlugin.instrumentSettings: _*)
-    dependsOn(peer % "compile->compile;test->test", commonTest % "test->compile")
   )
 
   lazy val peer = (Project(id = "peer", base = file("coinffeine-peer"))
@@ -94,24 +89,5 @@ object Build extends sbt.Build {
   lazy val gui = (Project(id = "gui", base = file("coinffeine-gui"))
     settings(ScoverageSbtPlugin.instrumentSettings: _*)
     dependsOn(peer % "compile->compile;test->test", commonTest)
-  )
-
-  lazy val test = (Project(id = "test", base = file("coinffeine-test"))
-    dependsOn(peer, server, okpaymock, commonTest % "compile->compile;test->compile")
-  )
-
-  lazy val okpaymock = (Project(id = "okpaymock", base = file("coinffeine-okpaymock"))
-    settings(CxfWsdl2JavaPlugin.cxf.settings: _*)
-    settings(
-      sourceGenerators in Compile <+= wsdl2java in Compile,
-      wsdls := Seq(
-        Wsdl((resourceDirectory in Compile).value / "okpay.wsdl",
-          Seq("-p", "coinffeine.okpaymock.generated", "-server", "-impl"),
-          "generated-sources-okpaymock"
-        )
-      )
-    )
-    settings(ScoverageSbtPlugin.instrumentSettings: _*)
-    dependsOn(model, peer, commonTest % "compile->compile;test->compile")
   )
 }
